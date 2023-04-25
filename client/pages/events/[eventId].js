@@ -1,53 +1,27 @@
+import "bootstrap/dist/css/bootstrap.min.css";
+import { Web3ReactProvider } from "@web3-react/core";
+import { Web3Provider } from "@ethersproject/providers";
+import { EventDetails } from "@/components/EventDetails";
 import { useRouter } from "next/router";
-// export async function getStaticPaths() {
-//
-// }
 
-// export async function getStaticProps({ params }) {
-// 	const postData = await getPostData(params.id);
-// 	return {
-// 		props: {
-// 			postData,
-// 		},
-// 	};
-// }
+function getLibrary(provider) {
+	provider.on("accountsChanged", () => {
+		if (typeof window !== undefined) {
+			window.localStorage.removeItem("token");
+		}
+	});
+	return new Web3Provider(provider);
+}
 
-export default function Position(params) {
+export default function EventIDPage() {
 	const router = useRouter();
-
-	// try {
-	// 	const { ethereum } = window;
-	// 	if (ethereum) {
-	// 		const provider = new ethers.providers.Web3Provider(ethereum);
-	// 		const signer = provider.getSigner();
-	// 		let nftPositionContractObj = new ethers.Contract(nftPositionManagerAddress, nftPositionManagerAbi, signer);
-	// 		if (account) {
-	// 			let tokenBalance = await nftPositionContractObj.balanceOf(account);
-	// 			let i = 0;
-	// 			let positionsArray = [];
-	// 			while (i < tokenBalance) {
-	// 				let tokenId = await nftPositionContractObj.tokenOfOwnerByIndex(account, i);
-	// 				tokenId = tokenId.toNumber();
-	// 				positionsArray.push(tokenId);
-	// 				i++;
-	// 			}
-	// 			console.log("Positions array = ", positionsArray);
-	// 			return positionsArray.map((id) => {
-	// 				return {
-	// 					params: {
-	// 						tokenId: id,
-	// 					},
-	// 				};
-	// 			});
-	// 		}
-	// 	}
-	// } catch (e) {
-	// 	console.log("Error while finding games", e);
-	// }
-
 	return (
-		<>
-			<h1>Inside {router?.query?.eventId} page</h1>
-		</>
+		<div className="game">
+			<div className="game-board">
+				<Web3ReactProvider getLibrary={getLibrary}>
+					<EventDetails eventId={router?.query?.eventId} />
+				</Web3ReactProvider>
+			</div>
+		</div>
 	);
 }

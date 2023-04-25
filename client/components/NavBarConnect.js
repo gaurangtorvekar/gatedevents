@@ -31,9 +31,9 @@ export function NavBarConnect() {
 	return (
 		<Navbar bg="light" fixed="top">
 			<Container>
-				<Navbar.Brand href="#home">Gated Events</Navbar.Brand>
+				<Navbar.Brand href="/">Gated Events</Navbar.Brand>
 				<Nav className="justify-content-end">
-					<Nav.Link href="https://github.com/gaurangtorvekar/onchain-tictactoe" target="_blank">
+					<Nav.Link href="https://github.com/gaurangtorvekar/gatedevents" target="_blank">
 						Github
 					</Nav.Link>
 					{account ? (

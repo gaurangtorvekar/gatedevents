@@ -32,6 +32,7 @@ contract Event is
     uint256 public ticketPrice;
     // Setting a default value of 5% platform fees - change later
     uint256 public platformFeesPercentInBPS = 500;
+    // TODO - remove this param because it already exists in the NFT name
     string public eventName;
     IERC20 public purchaseToken;
     IERC721 public gatingNFT;
@@ -44,6 +45,7 @@ contract Event is
     }
 
     // TODO - Cater to gatingNFT as 1155
+    // TODO - Check for expiration duration
     function initialize(
         address payable _eventCreator,
         uint256 _ticketsPerAddress,
@@ -60,14 +62,10 @@ contract Event is
         expirationDuration = _expirationDuration;
         ticketPrice = _ticketPrice;
         eventName = _eventName;
-
-        if (_purchaseTokenAddress != address(0)) {
-            purchaseToken = IERC20(_purchaseTokenAddress);
-        }
-
-        if (_gatingNFT != address(0)) {
-            gatingNFT = IERC721(_gatingNFT);
-        }
+        purchaseToken = IERC20(_purchaseTokenAddress);
+        gatingNFT = IERC721(_gatingNFT);
+        //Had to do this because the proxy clone sets this to 0x0000
+        platformFeeAddress = 0xfA205A82715F144096B75Ccc4C543A8a2D4CcfaF;
 
         __ERC721_init(_eventName, "");
         __ERC721Enumerable_init();
@@ -87,13 +85,12 @@ contract Event is
     function buyTicket(uint256 _numTickets) public {
         require(_tokenIdCounter.current() < maxTickets);
         require(ticketsCounter[msg.sender] <= ticketsPerAddress);
-        //Make sure that the buyer actually holds the required gating NFT
-        // if (gatingNFT != address(0)) {
-        //     require(gatingNFT.balanceOf(msg.sender) > 0);
-        // }
-        require(gatingNFT.balanceOf(msg.sender) > 0);
+        if (address(gatingNFT) != address(0)) {
+            //Make sure that the buyer actually holds the required gating NFT
+            require(gatingNFT.balanceOf(msg.sender) > 0);
+        }
 
-        if (ticketPrice > 0) {
+        if ((ticketPrice > 0) && (address(purchaseToken) != address(0))) {
             uint256 totalPrice = _numTickets * ticketPrice;
             uint256 platformFees = (totalPrice * platformFeesPercentInBPS) / 10000;
             uint256 creatorFees = totalPrice - platformFees;
@@ -122,6 +119,10 @@ contract Event is
         platformFeesPercentInBPS = _fees;
     }
 
+    function setPlatformFeeAddress(address _newAddress) external onlyOwner {
+        platformFeeAddress = _newAddress;
+    }
+
     function setMaxTickets(uint256 _maxTickets) external onlyOwner {
         maxTickets = _maxTickets;
     }
@@ -132,6 +133,10 @@ contract Event is
 
     function setGatingNFT(address _gatingNFT) external onlyOwner {
         gatingNFT = IERC721(_gatingNFT);
+    }
+
+    function _baseURI() internal pure override returns (string memory) {
+        return "https://example.com/";
     }
 
     // The following functions are overrides required by Solidity.

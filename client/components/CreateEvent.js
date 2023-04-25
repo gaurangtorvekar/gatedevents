@@ -44,7 +44,7 @@ export function CreateEvent() {
 				const signer = provider.getSigner();
 				let factory_contract_instance = new ethers.Contract(event_factory_contract, event_factory_abi, signer);
 				if (account) {
-					let tx = await factory_contract_instance.createNewEvent(account, 5, 10000, 100, 101010, "Hello World", "0xfA205A82715F144096B75Ccc4C543A8a2D4CcfaF", "0xfA205A82715F144096B75Ccc4C543A8a2D4CcfaF");
+					let tx = await factory_contract_instance.createNewEvent(account, 5, 10000, 100, 10, "Hello World", "0xE097d6B3100777DC31B34dC2c58fB524C2e76921", "0x0000000000000000000000000000000000000000");
 					console.log("New event = ", tx);
 				}
 			} else {
