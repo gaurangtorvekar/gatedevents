@@ -7,7 +7,7 @@ import { ethers, BigNumber } from "ethers";
 import { useEagerConnect } from "@/utils/useEagerConnect";
 import Link from "next/link";
 
-export function CreateEvent() {
+export function AllEvents() {
 	const { account } = useWeb3React();
 	const [events, setEvents] = useState([]);
 
@@ -66,9 +66,10 @@ export function CreateEvent() {
 				<Row>
 					<Col md={4}>Create a new Event</Col>
 					<Col md={4}>
-						<Button variant="outline-primary" onClick={createEvent}>
-							Create
-						</Button>{" "}
+						{/* <Link href="/createEvent">Go</Link> */}
+						<Link href="/createEvent">
+							<Button variant="outline-primary">Create</Button>{" "}
+						</Link>
 					</Col>
 					<Col md={4}></Col>
 				</Row>

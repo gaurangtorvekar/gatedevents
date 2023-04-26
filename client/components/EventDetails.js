@@ -11,6 +11,7 @@ export function EventDetails() {
 	const router = useRouter();
 	const { account } = useWeb3React();
 	const [eventData, setEventData] = useState({});
+	const [isEventCreator, setIsEventCreator] = useState(false);
 
 	const connectedOrNot = useEagerConnect();
 
@@ -63,6 +64,12 @@ export function EventDetails() {
 				console.log("Contract address = ", current_event_contract);
 				let event_contract_instance = new ethers.Contract(current_event_contract, event_abi, signer);
 				if (account) {
+					const eventCreator = await event_contract_instance.eventCreator();
+					if (account == eventCreator) {
+						console.log("Setting event creator true");
+						setIsEventCreator(true);
+					}
+
 					const eventName = await event_contract_instance.name();
 					const expirationDuration = await event_contract_instance.expirationDuration();
 					const gatingNFT = await event_contract_instance.gatingNFT();
@@ -70,6 +77,7 @@ export function EventDetails() {
 					const purchaseToken = await event_contract_instance.purchaseToken();
 					const ticketPrice = await event_contract_instance.ticketPrice();
 					const ticketsPerAddress = await event_contract_instance.ticketsPerAddress();
+
 					setEventData((eventData) => ({
 						"current_event_contract": current_event_contract,
 						"eventName": eventName,
@@ -98,6 +106,19 @@ export function EventDetails() {
 		<>
 			<NavBarConnect />
 			<Container>
+				{isEventCreator ? (
+					<Row>
+						<Col md={4}></Col>
+						<Col md={4}>
+							<h5>You are the event creator</h5>
+							<Button variant="primary" type="submit">
+								Edit
+							</Button>
+						</Col>
+						<Col md={4}></Col>
+						<hr />
+					</Row>
+				) : null}
 				<Row>
 					<Col md={8}>
 						<ListGroup as="ol" numbered>

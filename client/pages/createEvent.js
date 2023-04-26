@@ -1,5 +1,5 @@
 import "bootstrap/dist/css/bootstrap.min.css";
-import { AllEvents } from "@/components/AllEvents";
+import { CreateEventWizard } from "@/components/CreateEventWizard";
 import { Web3ReactProvider } from "@web3-react/core";
 import { Web3Provider } from "@ethersproject/providers";
 
@@ -17,7 +17,7 @@ export default function Home() {
 		<div className="game">
 			<div className="game-board">
 				<Web3ReactProvider getLibrary={getLibrary}>
-					<AllEvents />
+					<CreateEventWizard />
 				</Web3ReactProvider>
 			</div>
 		</div>
