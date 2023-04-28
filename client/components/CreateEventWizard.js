@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { Container, Row, Col, Button, Table, Form } from "react-bootstrap";
+import { Container, Row, Col, Button, Table, Form, Alert, Toast } from "react-bootstrap";
 import { NavBarConnect } from "./NavBarConnect";
 import { event_factory_contract, event_abi, event_contract, event_factory_abi } from "@/lib/contract_config";
 import { useWeb3React } from "@web3-react/core";
 import { ethers, BigNumber } from "ethers";
 import { useEagerConnect } from "@/utils/useEagerConnect";
 import Link from "next/link";
+import { useRouter } from "next/router";
 
 export function CreateEventWizard() {
 	const { account } = useWeb3React();
@@ -14,6 +15,8 @@ export function CreateEventWizard() {
 	const [purchaseTokenValue, setPurchaseTokenValue] = useState("0xE097d6B3100777DC31B34dC2c58fB524C2e76921");
 	const [ticketPriceDisabled, setTicketPriceDisabled] = useState(false);
 	const [ticketPrice, setTicketPrice] = useState("10");
+	const [showMinedToast, setShowMinedToast] = useState(false);
+	const router = useRouter();
 
 	const connectedOrNot = useEagerConnect();
 	// console.log("Eager connect succeeded?", connectedOrNot);
@@ -36,6 +39,7 @@ export function CreateEventWizard() {
 
 	const createEvent = async (e) => {
 		e.preventDefault();
+
 		console.log("Inside create events function");
 		try {
 			const { ethereum } = window;
@@ -56,6 +60,11 @@ export function CreateEventWizard() {
 				if (account) {
 					let tx = await factory_contract_instance.createNewEvent(data.eventCreator, data.ticketsPerAddress, data.expirationDuration, data.maxTickets, data.ticketPrice, data.eventName, data.purchaseToken, data.gatingNFT);
 					console.log("New event = ", tx);
+					setShowMinedToast(true);
+					let create_receipt = await tx.wait();
+					if (create_receipt) {
+						router.push("/");
+					}
 				}
 			} else {
 				console.log("Could not find ethereum object");
@@ -73,6 +82,17 @@ export function CreateEventWizard() {
 		<>
 			<NavBarConnect />
 			<Container>
+				{connectedOrNot ? null : (
+					<Alert variant="danger" onClose={() => setShow(false)} dismissible>
+						Please make sure that your Metamask is connected to <Alert.Link href="https://scroll.io/alpha">Scroll Alpha Testnet</Alert.Link> or Goerli Testnet. Please choose the correct chain on Metamask to proceed.
+					</Alert>
+				)}
+				{showMinedToast ? (
+					<Alert variant="info" dismissible>
+						Please wait for the transaction to be mined. Once it is, you will be redirected to the main page.
+					</Alert>
+				) : null}
+
 				<h4>Event creation page</h4>
 				<hr />
 				<Row>

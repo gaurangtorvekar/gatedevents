@@ -4,7 +4,7 @@ pragma solidity >=0.8.0;
 import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721BurnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
@@ -17,9 +17,12 @@ contract Event is
     ERC721Upgradeable,
     ERC721EnumerableUpgradeable,
     PausableUpgradeable,
-    OwnableUpgradeable,
+    AccessControlUpgradeable,
     ERC721BurnableUpgradeable
 {
+    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    bytes32 public constant CREATOR_ROLE = keccak256("CREATOR_ROLE");
+
     using CountersUpgradeable for CountersUpgradeable.Counter;
     using SafeERC20 for IERC20;
 
@@ -45,7 +48,7 @@ contract Event is
     }
 
     // TODO - Cater to gatingNFT as 1155
-    // TODO - Check for expiration duration
+    // TODO - Validate the inputs
     function initialize(
         address payable _eventCreator,
         uint256 _ticketsPerAddress,
@@ -70,18 +73,23 @@ contract Event is
         __ERC721_init(_eventName, "");
         __ERC721Enumerable_init();
         __Pausable_init();
-        __Ownable_init();
         __ERC721Burnable_init();
+        __AccessControl_init();
+
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(MINTER_ROLE, _eventCreator);
+        _grantRole(CREATOR_ROLE, _eventCreator);
     }
 
-    function pause() public onlyOwner {
+    function pause() public onlyRole(CREATOR_ROLE) {
         _pause();
     }
 
-    function unpause() public onlyOwner {
+    function unpause() public onlyRole(CREATOR_ROLE) {
         _unpause();
     }
 
+    // TODO - Check for expiration duration
     function buyTicket(uint256 _numTickets) public {
         require(_tokenIdCounter.current() < maxTickets);
         require(ticketsCounter[msg.sender] <= ticketsPerAddress);
@@ -115,25 +123,40 @@ contract Event is
         purchaseToken.safeTransferFrom(_sender, _receiver, _amount);
     }
 
-    function setPlatformFees(uint256 _fees) external onlyOwner {
+    // TODO - Validate the inputs for all the set functions
+    function setPlatformFees(uint256 _fees) external onlyRole(CREATOR_ROLE) {
         platformFeesPercentInBPS = _fees;
     }
 
-    function setPlatformFeeAddress(address _newAddress) external onlyOwner {
+    function setPlatformFeeAddress(address _newAddress) external onlyRole(CREATOR_ROLE) {
         platformFeeAddress = _newAddress;
     }
 
-    function setMaxTickets(uint256 _maxTickets) external onlyOwner {
+    function setMaxTickets(uint256 _maxTickets) external onlyRole(CREATOR_ROLE) {
         maxTickets = _maxTickets;
     }
 
-    function setTicketsPerAddress(uint256 _ticketsPerAddress) external onlyOwner {
+    function setTicketsPerAddress(uint256 _ticketsPerAddress) external onlyRole(CREATOR_ROLE) {
         ticketsPerAddress = _ticketsPerAddress;
     }
 
-    function setGatingNFT(address _gatingNFT) external onlyOwner {
+    function setGatingNFT(address _gatingNFT) external onlyRole(CREATOR_ROLE) {
         gatingNFT = IERC721(_gatingNFT);
     }
+
+    function setEventName(string memory _name) external onlyRole(CREATOR_ROLE) {
+        eventName = _name;
+    }
+
+    function setExpirationDuration(uint256 _duration) external onlyRole(CREATOR_ROLE) {
+        expirationDuration = _duration;
+    }
+
+    function setPurchaseToken(address _token) external onlyRole(CREATOR_ROLE) {
+        purchaseToken = IERC20(_token);
+    }
+
+    function setTicketPrice(uint256 _price) external onlyRole(CREATOR_ROLE) {}
 
     function _baseURI() internal pure override returns (string memory) {
         return "https://example.com/";
@@ -151,7 +174,7 @@ contract Event is
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override(ERC721Upgradeable, ERC721EnumerableUpgradeable)
+        override(ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessControlUpgradeable)
         returns (bool)
     {
         return super.supportsInterface(interfaceId);

@@ -50,6 +50,7 @@ contract EventProxyFactory is Ownable {
         return instance;
     }
 
+    //TODO - only return events for the current implementation
     function getOperatorEvents(address _operator) external view returns (address[] memory events) {
         events = operatorEvents[_operator];
     }
