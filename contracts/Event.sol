@@ -156,7 +156,9 @@ contract Event is
         purchaseToken = IERC20(_token);
     }
 
-    function setTicketPrice(uint256 _price) external onlyRole(CREATOR_ROLE) {}
+    function setTicketPrice(uint256 _price) external onlyRole(CREATOR_ROLE) {
+        ticketPrice = _price;
+    }
 
     function _baseURI() internal pure override returns (string memory) {
         return "https://example.com/";

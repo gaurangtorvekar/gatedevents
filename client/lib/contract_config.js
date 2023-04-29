@@ -310,25 +310,6 @@ export const event_abi = [
 		"anonymous": false,
 		"inputs": [
 			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "previousOwner",
-				"type": "address",
-			},
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "newOwner",
-				"type": "address",
-			},
-		],
-		"name": "OwnershipTransferred",
-		"type": "event",
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
 				"indexed": false,
 				"internalType": "address",
 				"name": "account",
@@ -336,6 +317,81 @@ export const event_abi = [
 			},
 		],
 		"name": "Paused",
+		"type": "event",
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "bytes32",
+				"name": "role",
+				"type": "bytes32",
+			},
+			{
+				"indexed": true,
+				"internalType": "bytes32",
+				"name": "previousAdminRole",
+				"type": "bytes32",
+			},
+			{
+				"indexed": true,
+				"internalType": "bytes32",
+				"name": "newAdminRole",
+				"type": "bytes32",
+			},
+		],
+		"name": "RoleAdminChanged",
+		"type": "event",
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "bytes32",
+				"name": "role",
+				"type": "bytes32",
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "account",
+				"type": "address",
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "sender",
+				"type": "address",
+			},
+		],
+		"name": "RoleGranted",
+		"type": "event",
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "bytes32",
+				"name": "role",
+				"type": "bytes32",
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "account",
+				"type": "address",
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "sender",
+				"type": "address",
+			},
+		],
+		"name": "RoleRevoked",
 		"type": "event",
 	},
 	{
@@ -375,6 +431,45 @@ export const event_abi = [
 		],
 		"name": "Unpaused",
 		"type": "event",
+	},
+	{
+		"inputs": [],
+		"name": "CREATOR_ROLE",
+		"outputs": [
+			{
+				"internalType": "bytes32",
+				"name": "",
+				"type": "bytes32",
+			},
+		],
+		"stateMutability": "view",
+		"type": "function",
+	},
+	{
+		"inputs": [],
+		"name": "DEFAULT_ADMIN_ROLE",
+		"outputs": [
+			{
+				"internalType": "bytes32",
+				"name": "",
+				"type": "bytes32",
+			},
+		],
+		"stateMutability": "view",
+		"type": "function",
+	},
+	{
+		"inputs": [],
+		"name": "MINTER_ROLE",
+		"outputs": [
+			{
+				"internalType": "bytes32",
+				"name": "",
+				"type": "bytes32",
+			},
+		],
+		"stateMutability": "view",
+		"type": "function",
 	},
 	{
 		"inputs": [
@@ -513,6 +608,67 @@ export const event_abi = [
 	{
 		"inputs": [
 			{
+				"internalType": "bytes32",
+				"name": "role",
+				"type": "bytes32",
+			},
+		],
+		"name": "getRoleAdmin",
+		"outputs": [
+			{
+				"internalType": "bytes32",
+				"name": "",
+				"type": "bytes32",
+			},
+		],
+		"stateMutability": "view",
+		"type": "function",
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bytes32",
+				"name": "role",
+				"type": "bytes32",
+			},
+			{
+				"internalType": "address",
+				"name": "account",
+				"type": "address",
+			},
+		],
+		"name": "grantRole",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function",
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bytes32",
+				"name": "role",
+				"type": "bytes32",
+			},
+			{
+				"internalType": "address",
+				"name": "account",
+				"type": "address",
+			},
+		],
+		"name": "hasRole",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool",
+			},
+		],
+		"stateMutability": "view",
+		"type": "function",
+	},
+	{
+		"inputs": [
+			{
 				"internalType": "address payable",
 				"name": "_eventCreator",
 				"type": "address",
@@ -609,19 +765,6 @@ export const event_abi = [
 		"type": "function",
 	},
 	{
-		"inputs": [],
-		"name": "owner",
-		"outputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address",
-			},
-		],
-		"stateMutability": "view",
-		"type": "function",
-	},
-	{
 		"inputs": [
 			{
 				"internalType": "uint256",
@@ -700,8 +843,37 @@ export const event_abi = [
 		"type": "function",
 	},
 	{
-		"inputs": [],
-		"name": "renounceOwnership",
+		"inputs": [
+			{
+				"internalType": "bytes32",
+				"name": "role",
+				"type": "bytes32",
+			},
+			{
+				"internalType": "address",
+				"name": "account",
+				"type": "address",
+			},
+		],
+		"name": "renounceRole",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function",
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bytes32",
+				"name": "role",
+				"type": "bytes32",
+			},
+			{
+				"internalType": "address",
+				"name": "account",
+				"type": "address",
+			},
+		],
+		"name": "revokeRole",
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function",
@@ -778,6 +950,32 @@ export const event_abi = [
 	{
 		"inputs": [
 			{
+				"internalType": "string",
+				"name": "_name",
+				"type": "string",
+			},
+		],
+		"name": "setEventName",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function",
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_duration",
+				"type": "uint256",
+			},
+		],
+		"name": "setExpirationDuration",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function",
+	},
+	{
+		"inputs": [
+			{
 				"internalType": "address",
 				"name": "_gatingNFT",
 				"type": "address",
@@ -804,12 +1002,51 @@ export const event_abi = [
 	{
 		"inputs": [
 			{
+				"internalType": "address",
+				"name": "_newAddress",
+				"type": "address",
+			},
+		],
+		"name": "setPlatformFeeAddress",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function",
+	},
+	{
+		"inputs": [
+			{
 				"internalType": "uint256",
 				"name": "_fees",
 				"type": "uint256",
 			},
 		],
 		"name": "setPlatformFees",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function",
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_token",
+				"type": "address",
+			},
+		],
+		"name": "setPurchaseToken",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function",
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_price",
+				"type": "uint256",
+			},
+		],
+		"name": "setTicketPrice",
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function",
@@ -998,19 +1235,6 @@ export const event_abi = [
 			},
 		],
 		"name": "transferFrom",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function",
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "newOwner",
-				"type": "address",
-			},
-		],
-		"name": "transferOwnership",
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function",

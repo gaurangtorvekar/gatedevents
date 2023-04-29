@@ -37,50 +37,35 @@ export function EventDetails() {
 			const provider = new ethers.providers.Web3Provider(ethereum);
 			const signer = provider.getSigner();
 			const current_event_contract = router?.query?.eventId;
-			console.log("Contract address = ", current_event_contract);
+			console.log("Contract address inside try = ", current_event_contract);
 			event_contract_instance = new ethers.Contract(current_event_contract, event_abi, signer);
 		} else {
 			console.log("Could not find ethereum object");
 		}
 	} catch (e) {
-		console.log("Error while finding events", e);
+		// console.log("Error while finding events", e);
 	}
 
 	const buyTicket = async (e) => {
 		e.preventDefault();
 		console.log("Inside buy ticket function");
-		try {
-			const { ethereum } = window;
-			if (ethereum) {
-				const provider = new ethers.providers.Web3Provider(ethereum);
-				const signer = provider.getSigner();
-				const current_event_contract = router?.query?.eventId;
-				const numTickets = e.target.numTickets.value;
-				console.log("Contract address = ", event_contract);
-				let event_contract_instance = new ethers.Contract(current_event_contract, event_abi, signer);
-				if (account) {
-					//First, get the ticket price
-					let ticketPrice = await event_contract_instance.ticketPrice();
-					ticketPrice = ticketPrice.toNumber();
-					const numTokens = ticketPrice * numTickets;
-					const purchaseToken = await event_contract_instance.purchaseToken();
+		if (account) {
+			//First, get the ticket price
+			let ticketPrice = await event_contract_instance.ticketPrice();
+			ticketPrice = ticketPrice.toNumber();
+			const numTokens = ticketPrice * numTickets;
+			const purchaseToken = await event_contract_instance.purchaseToken();
 
-					if (ticketPrice > 0) {
-						// //Ask the user to approve the required tokens to the contract
-						const purchase_token_instance = new ethers.Contract(purchaseToken, erc20_abi, signer);
-						const approve_tx = await purchase_token_instance.approve(current_event_contract, numTokens);
-						let approve_receipt = await approve_tx.wait();
-						if (approve_receipt) {
-							await event_contract_instance.buyTicket(numTickets);
-						}
-						// await event_contract_instance.buyTicket(numTickets);
-					}
+			if (ticketPrice > 0) {
+				// //Ask the user to approve the required tokens to the contract
+				const purchase_token_instance = new ethers.Contract(purchaseToken, erc20_abi, signer);
+				const approve_tx = await purchase_token_instance.approve(current_event_contract, numTokens);
+				let approve_receipt = await approve_tx.wait();
+				if (approve_receipt) {
+					await event_contract_instance.buyTicket(numTickets);
 				}
-			} else {
-				console.log("Could not find ethereum object");
+				// await event_contract_instance.buyTicket(numTickets);
 			}
-		} catch (e) {
-			console.log("Error while finding events", e);
 		}
 	};
 
@@ -103,6 +88,62 @@ export function EventDetails() {
 			let tx = await event_contract_instance.setGatingNFT(updateGatingNFT);
 			let tx_receipt = await tx.wait();
 			setEditGatingNFT(false);
+		}
+	};
+
+	const updatePurchaseToken = async () => {
+		console.log("Inside updatePurchaseToken");
+		const updatePurchaseToken = purchaseTokenRef.current.value;
+		console.log("New value = ", updatePurchaseToken);
+		if (account) {
+			// 0xE097d6B3100777DC31B34dC2c58fB524C2e76921
+			let tx = await event_contract_instance.setPurchaseToken(updatePurchaseToken);
+			let tx_receipt = await tx.wait();
+			setEditPurchaseToken(false);
+		}
+	};
+
+	const updateEventName = async () => {
+		console.log("Inside updateEventName");
+		const updateEventName = eventNameRef.current.value;
+		console.log("New value = ", updateEventName);
+		if (account) {
+			let tx = await event_contract_instance.setEventName(updateEventName);
+			let tx_receipt = await tx.wait();
+			setEditEventName(false);
+		}
+	};
+
+	const updateExpirationDuration = async () => {
+		console.log("Inside updateExpirationDuration");
+		const updateExpirationDuration = expirationDurationRef.current.value;
+		console.log("New value = ", updateExpirationDuration);
+		if (account) {
+			let tx = await event_contract_instance.setExpirationDuration(updateExpirationDuration);
+			let tx_receipt = await tx.wait();
+			setEditExpirationDuration(false);
+		}
+	};
+
+	const updateTicketPrice = async () => {
+		console.log("Inside updateTicketPrice");
+		const updateTicketPrice = ticketPriceRef.current.value;
+		console.log("New value = ", updateTicketPrice);
+		if (account) {
+			let tx = await event_contract_instance.setTicketPrice(updateTicketPrice);
+			let tx_receipt = await tx.wait();
+			setEditTicketPrice(false);
+		}
+	};
+
+	const updateTicketsPerAddress = async () => {
+		console.log("Inside updateTicketsPerAddress");
+		const updateTicketsPerAddress = ticketsPerAddressRef.current.value;
+		console.log("New value = ", updateTicketsPerAddress);
+		if (account) {
+			let tx = await event_contract_instance.setTicketsPerAddress(updateTicketsPerAddress);
+			let tx_receipt = await tx.wait();
+			setEditTicketsPerAddress(false);
 		}
 	};
 
@@ -157,20 +198,55 @@ export function EventDetails() {
 						<ListGroup>
 							<ListGroup.Item>Contract address = {eventData.current_event_contract}</ListGroup.Item>
 							<ListGroup.Item>
-								Name = {eventData.eventName}{" "}
-								{isEventCreator ? (
-									<Button className="float-end btn-sm" variant="primary" type="submit">
-										Edit
-									</Button>
-								) : null}
+								{editEventName ? (
+									<InputGroup className="mb-3">
+										<Form.Control placeholder="Event Name" ref={eventNameRef} />
+										<Button onClick={updateEventName} variant="outline-primary" id="button-addon2">
+											&#10003;
+										</Button>
+										<Button onClick={() => setEditEventName(false)} variant="outline-secondary">
+											&#10060;
+										</Button>
+									</InputGroup>
+								) : (
+									<div>
+										Name = {eventData.eventName}{" "}
+										{isEventCreator ? (
+											<Button onClick={() => setEditEventName(true)} className="float-end btn-sm" variant="primary" type="submit">
+												Edit
+											</Button>
+										) : null}
+									</div>
+								)}
 							</ListGroup.Item>
 							<ListGroup.Item>
-								Expiry = {eventData.expirationDuration}{" "}
-								{isEventCreator ? (
-									<Button className="float-end btn-sm" variant="primary" type="submit">
-										Edit
-									</Button>
-								) : null}
+								{editExpirationDuration ? (
+									<InputGroup className="mb-3">
+										<Form.Control placeholder="Expiration Duration" ref={expirationDurationRef} />
+										<Button onClick={updateExpirationDuration} variant="outline-primary" id="button-addon2">
+											&#10003;
+										</Button>
+										<Button onClick={() => setEditExpirationDuration(false)} variant="outline-secondary">
+											&#10060;
+										</Button>
+									</InputGroup>
+								) : (
+									<div>
+										Expiry = {eventData.expirationDuration}{" "}
+										{isEventCreator ? (
+											<Button
+												onClick={() => {
+													setEditExpirationDuration(true);
+												}}
+												className="float-end btn-sm"
+												variant="primary"
+												type="submit"
+											>
+												Edit
+											</Button>
+										) : null}
+									</div>
+								)}
 							</ListGroup.Item>
 							<ListGroup.Item>
 								{editGatingNFT ? (
@@ -217,28 +293,70 @@ export function EventDetails() {
 								)}
 							</ListGroup.Item>
 							<ListGroup.Item>
-								Purchase Token = {eventData.purchaseToken}{" "}
-								{isEventCreator ? (
-									<Button className="float-end btn-sm" variant="primary" type="submit">
-										Edit
-									</Button>
-								) : null}
+								{editPurchaseToken ? (
+									<InputGroup className="mb-3">
+										<Form.Control placeholder="Purchase Token" ref={purchaseTokenRef} />
+										<Button onClick={updatePurchaseToken} variant="outline-primary" id="button-addon2">
+											&#10003;
+										</Button>
+										<Button onClick={() => setEditPurchaseToken(false)} variant="outline-secondary">
+											&#10060;
+										</Button>
+									</InputGroup>
+								) : (
+									<div>
+										Purchase Token = {eventData.purchaseToken}{" "}
+										{isEventCreator ? (
+											<Button onClick={() => setEditPurchaseToken(true)} className="float-end btn-sm" variant="primary" type="submit">
+												Edit
+											</Button>
+										) : null}
+									</div>
+								)}
 							</ListGroup.Item>
 							<ListGroup.Item>
-								Ticket Price = {eventData.ticketPrice}{" "}
-								{isEventCreator ? (
-									<Button className="float-end btn-sm" variant="primary" type="submit">
-										Edit
-									</Button>
-								) : null}
+								{editTicketPrice ? (
+									<InputGroup className="mb-3">
+										<Form.Control placeholder="Ticket Price" ref={ticketPriceRef} />
+										<Button onClick={updateTicketPrice} variant="outline-primary" id="button-addon2">
+											&#10003;
+										</Button>
+										<Button onClick={() => setEditTicketPrice(false)} variant="outline-secondary">
+											&#10060;
+										</Button>
+									</InputGroup>
+								) : (
+									<div>
+										Ticket Price = {eventData.ticketPrice}{" "}
+										{isEventCreator ? (
+											<Button onClick={() => setEditTicketPrice(true)} className="float-end btn-sm" variant="primary" type="submit">
+												Edit
+											</Button>
+										) : null}
+									</div>
+								)}
 							</ListGroup.Item>
 							<ListGroup.Item>
-								Tickets per address = {eventData.ticketsPerAddress}{" "}
-								{isEventCreator ? (
-									<Button className="float-end btn-sm" variant="primary" type="submit">
-										Edit
-									</Button>
-								) : null}
+								{editTicketsPerAddress ? (
+									<InputGroup className="mb-3">
+										<Form.Control placeholder="Tickets per address" ref={ticketsPerAddressRef} />
+										<Button onClick={updateTicketsPerAddress} variant="outline-primary" id="button-addon2">
+											&#10003;
+										</Button>
+										<Button onClick={() => setEditTicketsPerAddress(false)} variant="outline-secondary">
+											&#10060;
+										</Button>
+									</InputGroup>
+								) : (
+									<div>
+										Tickets per address = {eventData.ticketsPerAddress}{" "}
+										{isEventCreator ? (
+											<Button onClick={() => setEditTicketsPerAddress(true)} className="float-end btn-sm" variant="primary" type="submit">
+												Edit
+											</Button>
+										) : null}
+									</div>
+								)}
 							</ListGroup.Item>
 						</ListGroup>
 					</Col>
