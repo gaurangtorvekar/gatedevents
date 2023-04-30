@@ -33,6 +33,7 @@ export function NavBarConnect() {
 			<Container>
 				<Navbar.Brand href="/">Gated Events</Navbar.Brand>
 				<Nav className="justify-content-end">
+					<Nav.Link href="/tickets">My Tickets</Nav.Link>
 					<Nav.Link href="https://github.com/gaurangtorvekar/gatedevents" target="_blank">
 						Github
 					</Nav.Link>

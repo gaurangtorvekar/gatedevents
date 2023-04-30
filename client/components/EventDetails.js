@@ -30,13 +30,13 @@ export function EventDetails() {
 	const ticketPriceRef = useRef(null);
 	const ticketsPerAddressRef = useRef(null);
 
-	let event_contract_instance;
+	let event_contract_instance, signer, current_event_contract;
 	try {
 		const { ethereum } = window;
 		if (ethereum) {
 			const provider = new ethers.providers.Web3Provider(ethereum);
-			const signer = provider.getSigner();
-			const current_event_contract = router?.query?.eventId;
+			signer = provider.getSigner();
+			current_event_contract = router?.query?.eventId;
 			console.log("Contract address inside try = ", current_event_contract);
 			event_contract_instance = new ethers.Contract(current_event_contract, event_abi, signer);
 		} else {
@@ -51,6 +51,8 @@ export function EventDetails() {
 		console.log("Inside buy ticket function");
 		if (account) {
 			//First, get the ticket price
+			let numTickets = e.target.numTickets.value;
+			console.log(numTickets);
 			let ticketPrice = await event_contract_instance.ticketPrice();
 			ticketPrice = ticketPrice.toNumber();
 			const numTokens = ticketPrice * numTickets;
@@ -64,7 +66,6 @@ export function EventDetails() {
 				if (approve_receipt) {
 					await event_contract_instance.buyTicket(numTickets);
 				}
-				// await event_contract_instance.buyTicket(numTickets);
 			}
 		}
 	};
