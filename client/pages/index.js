@@ -14,8 +14,8 @@ function getLibrary(provider) {
 
 export default function Home() {
 	return (
-		<div className="game">
-			<div className="game-board">
+		<div className="game container mx-auto px-4">
+			<div>
 				<Web3ReactProvider getLibrary={getLibrary}>
 					<AllEvents />
 				</Web3ReactProvider>

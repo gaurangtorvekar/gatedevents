@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Container, Row, Col, Button, Table, Form, Alert, Toast } from "react-bootstrap";
+import { Container, Row, Col, Button, Table, Form, Alert, Toast, Card } from "react-bootstrap";
 import { NavBarConnect } from "./NavBarConnect";
 import { event_factory_contract, event_abi, event_contract, event_factory_abi } from "@/lib/contract_config";
 import { useWeb3React } from "@web3-react/core";
@@ -96,7 +96,17 @@ export function CreateEventWizard() {
 				<h4>Event creation page</h4>
 				<hr />
 				<Row>
-					<Col md={12}>
+					<Col md={4}>
+						<Card style={{ width: "18rem" }}>
+							<Card.Img variant="top" src="holder.js/100px180" />
+							<Card.Body>
+								{/* <Card.Title>Card Title</Card.Title> */}
+								<Card.Text>Upload your event visuals here</Card.Text>
+								<Button variant="primary">Upload</Button>
+							</Card.Body>
+						</Card>
+					</Col>
+					<Col md={8}>
 						<Form onSubmit={createEvent}>
 							<Row className="mb-3">
 								<Form.Group as={Col} controlId="formEventName">

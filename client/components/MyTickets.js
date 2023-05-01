@@ -58,10 +58,18 @@ export function MyTickets() {
 	return (
 		<>
 			<NavBarConnect />
-
+			<h3>My Tickets Page</h3>
+			<div className="grid grid-cols-3 gap-4">
+				{tickets.length ? (
+					<>
+						<div>01</div>
+						<div>02</div>
+						<div>03</div>
+					</>
+				) : null}
+			</div>
 			<Container>
 				<Row>
-					<h3>My Tickets Page</h3>
 					<hr />
 					<Col>
 						{tickets.length > 0 ? (

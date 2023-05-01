@@ -37,6 +37,11 @@ export function NavBarConnect() {
 					<Nav.Link href="https://github.com/gaurangtorvekar/gatedevents" target="_blank">
 						Github
 					</Nav.Link>
+					<Nav.Link href="/createEvent">
+						<button type="button" className="ml-3 inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+							Create
+						</button>
+					</Nav.Link>
 					{account ? (
 						<NavDropdown id="nav-dropdown-dark-example" title={truncateEthAddress(account)}>
 							<NavDropdown.Item href="#action/3.1" onClick={disconnectWallet}>

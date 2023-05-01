@@ -1,5 +1,8 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 body {
-  font: 14px "Century Gothic", Futura, sans-serif;
+  /* font: 14px "Century Gothic", Futura, sans-serif; */
   margin: 20px;
 }
 
@@ -44,7 +47,7 @@ ol, ul {
 }
 
 .game {
-margin-top: 5%;
+margin-top: 6%;
 }
 
 .game-info {

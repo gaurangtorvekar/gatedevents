@@ -62,48 +62,34 @@ export function AllEvents() {
 	return (
 		<>
 			<NavBarConnect />
-			<Container>
-				<Row>
-					<Col md={4}>Create a new Event</Col>
-					<Col md={4}>
-						{/* <Link href="/createEvent">Go</Link> */}
-						<Link href="/createEvent">
-							<Button variant="outline-primary">Create</Button>{" "}
-						</Link>
-					</Col>
-					<Col md={4}></Col>
-				</Row>
-				<hr />
-				<Row>
-					<Col>
-						{events.length > 0 ? (
-							<Table striped bordered hover>
-								<thead>
-									<tr>
-										<th>#</th>
-										<th>Event Contract</th>
-									</tr>
-								</thead>
-								<tbody>
-									{events.map((item, index) => (
-										<tr key={index}>
-											<td>{index + 1}</td>
 
-											<td>
-												<Link href={`events/${item}`}>{item}</Link>
-											</td>
-										</tr>
-									))}
-								</tbody>
-							</Table>
-						) : (
-							<p>Oops! You haven't created any events yet.</p>
-						)}
-					</Col>
-					<Col></Col>
-					<Col></Col>
-				</Row>
-			</Container>
+			<div className="flex flex-row">
+				<div className="basis-1/4 py-2">
+					<h3>List of events</h3>
+				</div>
+				<div className="basis-3/4 grid py-2 gap-4">
+					{events.map((item, index) => (
+						<div key={index} className=" col-span-2 overflow-hidden rounded-lg bg-white shadow">
+							<div className="px-1 py-1 sm:px-2">
+								<div className="ml-4 mt-4">
+									<h3 className="text-base font-semibold leading-6 text-gray-900">Job Postings</h3>
+									<p className="mt-1 text-sm text-gray-500">Lorem ipsum dolor sit amet consectetur adipisicing elit quam corrupti consectetur.</p>
+									<p className="mt-1 text-sm text-gray-500">{item}</p>
+								</div>
+							</div>
+							<div className="bg-gray-50 px-4 py-5 sm:p-6">
+								<div className="ml-4 mt-4 flex-shrink-0 py-2">
+									<Link href={`events/${item}`}>
+										<button type="button" className="relative inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+											Details
+										</button>
+									</Link>
+								</div>
+							</div>
+						</div>
+					))}
+				</div>
+			</div>
 		</>
 	);
 }
