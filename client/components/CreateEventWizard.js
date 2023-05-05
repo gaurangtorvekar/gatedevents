@@ -9,10 +9,8 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { PhotoIcon, UserCircleIcon } from "@heroicons/react/24/solid";
 import { Switch } from "@headlessui/react";
-import dynamic from "next/dynamic";
-import { MyDatePicker } from "./tailwind-elements/MyDatePicker";
-
-const DynamicDatepicker = dynamic(() => import("./tailwind-elements/MyDatePicker"), { ssr: false });
+import Datepicker from "react-tailwindcss-datepicker";
+import Image from "next/image";
 
 function classNames(...classes) {
 	return classes.filter(Boolean).join(" ");
@@ -29,6 +27,73 @@ export function CreateEventWizard() {
 	const router = useRouter();
 	const [inPerson, setInPerson] = useState(false);
 	const [freeEvent, setFreeEvent] = useState(false);
+
+	const [file, setFile] = useState(null);
+	const [previewURL, setPreviewURL] = useState(null);
+
+	const [value, setValue] = useState({
+		startDate: null,
+		endDate: null,
+	});
+
+	const handleValueChange = (newValue) => {
+		console.log("newValue:", newValue);
+		setValue(newValue);
+	};
+
+	const onFileUploadChange = (e) => {
+		e.preventDefault();
+		console.log("From fileuploadchange");
+
+		const file = e.target.files?.[0];
+
+		if (!file?.type.startsWith("image")) {
+			alert("Select a valid file type");
+			return;
+		}
+
+		setFile(file);
+		setPreviewURL(URL.createObjectURL(file));
+
+		e.target.value = null;
+	};
+
+	const onCancelFile = (e) => {
+		e.preventDefault();
+		console.log("From cancel file");
+		if (!previewURL && !file) {
+			return;
+		}
+
+		setFile(null);
+		setPreviewURL(null);
+	};
+
+	const onUploadFile = async (e) => {
+		e.preventDefault();
+		console.log("From upload file");
+		if (!file) {
+			return;
+		}
+
+		try {
+			console.log("Inside onUploadFile = ", file);
+			let formData = new FormData();
+			formData.append("media", file);
+
+			const res = await fetch("/api/upload", {
+				method: "POST",
+				body: formData,
+			});
+
+			const { cid } = await res.json();
+			console.log("File uploaded successfully", cid);
+			setFile(null);
+			setPreviewURL(null);
+		} catch (e) {
+			console.log("Error = ", e);
+		}
+	};
 
 	const connectedOrNot = useEagerConnect();
 	// console.log("Eager connect succeeded?", connectedOrNot);
@@ -86,10 +151,6 @@ export function CreateEventWizard() {
 		}
 	};
 
-	// useEffect(() => {
-	// 	findEvents();
-	// }, [account]);
-
 	return (
 		<>
 			<NavBarConnect />
@@ -111,7 +172,6 @@ export function CreateEventWizard() {
 						<Card style={{ width: "18rem" }}>
 							<Card.Img variant="top" src="holder.js/100px180" />
 							<Card.Body>
-								{/* <Card.Title>Card Title</Card.Title> */}
 								<Card.Text>Upload your event visuals here</Card.Text>
 								<Button variant="primary">Upload</Button>
 							</Card.Body>
@@ -175,7 +235,7 @@ export function CreateEventWizard() {
 				</Row>
 			</Container>
 			<hr />
-			<form>
+			<form onSubmit={(e) => e.preventDefault()}>
 				<div className="space-y-12">
 					<div className="grid grid-cols-1 gap-x-8 gap-y-10 border-b border-gray-900/10 pb-12 md:grid-cols-3">
 						<div>
@@ -188,7 +248,32 @@ export function CreateEventWizard() {
 								<label htmlFor="cover-photo" className="block text-sm font-medium leading-6 text-gray-900">
 									Cover photo
 								</label>
-								<div className="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 px-6 py-10">
+								<div className="flex flex-col md:flex-row gap-1.5 md:py-4">
+									<div className="flex-grow">
+										{previewURL ? (
+											<div className="mx-auto w-80">
+												<Image alt="file uploader preview" objectFit="cover" src={previewURL} width={320} height={218} layout="fixed" />
+											</div>
+										) : (
+											<label className="flex flex-col items-center justify-center h-full py-3 transition-colors duration-150 cursor-pointer hover:text-gray-600">
+												<svg xmlns="http://www.w3.org/2000/svg" className="w-14 h-14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+													<path strokeLinecap="round" strokeLinejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+												</svg>
+												<strong className="text-sm font-medium">Select an image</strong>
+												<input className="block w-0 h-0" name="file" type="file" onChange={onFileUploadChange} />
+											</label>
+										)}
+									</div>
+									<div className="flex mt-4 md:mt-0 md:flex-col justify-center gap-1.5">
+										<button disabled={!previewURL} onClick={onCancelFile} className="w-1/2 px-4 py-3 text-sm font-medium text-white transition-colors duration-300 bg-gray-700 rounded-sm md:w-auto md:text-base disabled:bg-gray-400 hover:bg-gray-600">
+											Cancel file
+										</button>
+										<button disabled={!previewURL} onClick={onUploadFile} className="w-1/2 px-4 py-3 text-sm font-medium text-white transition-colors duration-300 bg-gray-700 rounded-sm md:w-auto md:text-base disabled:bg-gray-400 hover:bg-gray-600">
+											Upload file
+										</button>
+									</div>
+								</div>
+								{/* <div className="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 px-6 py-10">
 									<div className="text-center">
 										<PhotoIcon className="mx-auto h-12 w-12 text-gray-300" aria-hidden="true" />
 										<div className="mt-4 flex text-sm leading-6 text-gray-600">
@@ -200,7 +285,7 @@ export function CreateEventWizard() {
 										</div>
 										<p className="text-xs leading-5 text-gray-600">PNG, JPG, GIF up to 10MB</p>
 									</div>
-								</div>
+								</div> */}
 							</div>
 							<div className="sm:col-span-4">
 								<label htmlFor="website" className="block text-sm font-medium leading-6 text-gray-900">
@@ -208,7 +293,7 @@ export function CreateEventWizard() {
 								</label>
 								<div className="mt-2">
 									<div className="flex rounded-md shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 sm:max-w-md">
-										<input type="text" name="eventName" id="website" defaultValue="Hello World" className="block flex-1 border-0 bg-transparent py-1.5 pl-1 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6" />
+										<input id="email" name="organiserEmail" type="text" defaultValue="Hello World" className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
 									</div>
 								</div>
 							</div>
@@ -230,20 +315,10 @@ export function CreateEventWizard() {
 							</div>
 							<div className="sm:col-span-3">
 								<label htmlFor="first-name" className="block text-sm font-medium leading-6 text-gray-900">
-									Start Date
+									Dates
 								</label>
 								<div className="mt-2">
-									{/* <input type="text" name="first-name" id="first-name" autoComplete="given-name" className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" /> */}
-									<DynamicDatepicker />
-								</div>
-							</div>
-
-							<div className="sm:col-span-3">
-								<label htmlFor="last-name" className="block text-sm font-medium leading-6 text-gray-900">
-									End Date
-								</label>
-								<div className="mt-2">
-									<input type="text" name="last-name" id="last-name" autoComplete="family-name" className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
+									<Datepicker primaryColor={"sky"} value={value} onChange={handleValueChange} showShortcuts={true} className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
 								</div>
 							</div>
 						</div>
