@@ -159,77 +159,7 @@ export function CreateEventWizard() {
 					Please wait for the transaction to be mined. Once it is, you will be redirected to the main page.
 				</Alert>
 			) : null}
-			<Container>
-				<h4>Event creation page</h4>
-				<hr />
-				<Row>
-					<Col md={4}>
-						<Card style={{ width: "18rem" }}>
-							<Card.Img variant="top" src="holder.js/100px180" />
-							<Card.Body>
-								<Card.Text>Upload your event visuals here</Card.Text>
-								<Button variant="primary">Upload</Button>
-							</Card.Body>
-						</Card>
-					</Col>
-					<Col md={8}>
-						<Form onSubmit={createEvent}>
-							<Row className="mb-3">
-								<Form.Group as={Col} controlId="formEventName">
-									<Form.Label>Event Name</Form.Label>
-									<Form.Control name="eventName" defaultValue="Hello World" />
-								</Form.Group>
 
-								<Form.Group as={Col} controlId="formEventCreator">
-									<Form.Label>Event Creator</Form.Label>
-									<Form.Control name="eventCreator" defaultValue={account} />
-								</Form.Group>
-							</Row>
-							<Row className="mb-3">
-								<Form.Group as={Col} controlId="formMaxTickets">
-									<Form.Label>Maximum tickets</Form.Label>
-									<Form.Control name="maxTickets" defaultValue="100" />
-								</Form.Group>
-
-								<Form.Group as={Col} controlId="formTicketPerAddress">
-									<Form.Label>Max tickets per address</Form.Label>
-									<Form.Control name="ticketsPerAddress" defaultValue="10" />
-								</Form.Group>
-							</Row>
-
-							<Row className="mb-3">
-								<Form.Group as={Col} controlId="formTicketPrice">
-									<Form.Label>Ticket Price</Form.Label>
-									<Form.Control name="ticketPrice" defaultValue={ticketPrice} disabled={ticketPriceDisabled} />
-								</Form.Group>
-								<Form.Group as={Col} controlId="formExpirationDuration">
-									<Form.Label>Event Expires on</Form.Label>
-									<Form.Control name="expirationDuration" defaultValue="10100" />
-								</Form.Group>
-							</Row>
-							<Row className="mb-3">
-								<Form.Group as={Col} controlId="formPurchaseToken">
-									<Form.Label>Purchase Token</Form.Label>
-									<Form.Control name="purchaseToken" defaultValue={purchaseTokenValue} disabled={purchaseTokenDisabled} />
-								</Form.Group>
-								<Form.Group as={Col} controlId="formGatingNFT">
-									<Form.Label>Gating NFT address</Form.Label>
-									<Form.Control name="gatingNFT" defaultValue="0x0000000000000000000000000000000000000000" />
-								</Form.Group>
-							</Row>
-
-							<Form.Group className="mb-3" id="formGridCheckbox">
-								<Form.Check type="switch" id="custom-switch" label="Set as a free event" onChange={handleFreeEvent} />
-							</Form.Group>
-
-							<Button variant="primary" type="submit">
-								Submit
-							</Button>
-						</Form>
-					</Col>
-				</Row>
-			</Container>
-			<hr />
 			<form onSubmit={(e) => e.preventDefault()}>
 				<div className="space-y-12">
 					<div className="grid grid-cols-1 gap-x-8 gap-y-10 border-b border-gray-900/10 pb-12 md:grid-cols-3">
@@ -243,35 +173,10 @@ export function CreateEventWizard() {
 								<label htmlFor="cover-photo" className="block text-sm font-medium leading-6 text-gray-900">
 									Cover photo
 								</label>
-								{/* <div className="flex flex-col md:flex-row gap-1.5 md:py-4">
-									<div className="flex-grow">
-										{previewURL ? (
-											<div className="mx-auto w-80">
-												<Image alt="file uploader preview" objectFit="cover" src={previewURL} width={320} height={218} layout="fixed" />
-											</div>
-										) : (
-											<label className="flex flex-col items-center justify-center h-full py-3 transition-colors duration-150 cursor-pointer hover:text-gray-600">
-												<svg xmlns="http://www.w3.org/2000/svg" className="w-14 h-14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-													<path strokeLinecap="round" strokeLinejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
-												</svg>
-												<strong className="text-sm font-medium">Select an image</strong>
-												<input className="block w-0 h-0" name="file" type="file" onChange={onFileUploadChange} />
-											</label>
-										)}
-									</div>
-									<div className="flex mt-4 md:mt-0 md:flex-col justify-center gap-1.5">
-										<button disabled={!previewURL} onClick={onCancelFile} className="w-1/2 px-4 py-3 text-sm font-medium text-white transition-colors duration-300 bg-gray-700 rounded-sm md:w-auto md:text-base disabled:bg-gray-400 hover:bg-gray-600">
-											Cancel file
-										</button>
-										<button disabled={!previewURL} onClick={onUploadFile} className="w-1/2 px-4 py-3 text-sm font-medium text-white transition-colors duration-300 bg-gray-700 rounded-sm md:w-auto md:text-base disabled:bg-gray-400 hover:bg-gray-600">
-											Upload file
-										</button>
-									</div>
-								</div> */}
 								<div className="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 px-6 py-10">
 									{previewURL ? (
 										<div className="mx-auto w-80">
-											<Image alt="file uploader preview" objectFit="cover" src={previewURL} width={320} height={218} layout="fixed" />
+											<Image alt="file uploader preview" objectFit="cover" src={previewURL} width={250} height={170} layout="fixed" />
 										</div>
 									) : (
 										<div className="text-center">
@@ -287,14 +192,18 @@ export function CreateEventWizard() {
 										</div>
 									)}
 								</div>
-								<div className="flex mt-4 md:mt-0 md:flex-col justify-center gap-1.5">
-									<button disabled={!previewURL} onClick={onCancelFile} className="w-1/2 px-4 py-3 text-sm font-medium text-white transition-colors duration-300 bg-gray-700 rounded-sm md:w-auto md:text-base disabled:bg-gray-400 hover:bg-gray-600">
-										Cancel file
-									</button>
-									<button disabled={!previewURL} onClick={onUploadFile} className="w-1/2 px-4 py-3 text-sm font-medium text-white transition-colors duration-300 bg-gray-700 rounded-sm md:w-auto md:text-base disabled:bg-gray-400 hover:bg-gray-600">
-										Upload file
-									</button>
-								</div>
+
+								<button
+									disabled={!previewURL}
+									onClick={onUploadFile}
+									type="button"
+									class="mt-3 text-green-700 hover:text-white border border-green-700 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mr-2 mb-2 dark:border-green-500 dark:text-green-500 dark:hover:text-white dark:hover:bg-green-600 dark:focus:ring-green-800"
+								>
+									Confirm
+								</button>
+								<button disabled={!previewURL} onClick={onCancelFile} type="button" class="mt-3 text-red-700 hover:text-white border border-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mr-2 mb-2 dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">
+									Cancel
+								</button>
 							</div>
 							<div className="sm:col-span-4">
 								<label htmlFor="website" className="block text-sm font-medium leading-6 text-gray-900">
@@ -557,6 +466,77 @@ export function CreateEventWizard() {
 					</button>
 				</div>
 			</form>
+			<hr />
+			<Container>
+				<h4>Event creation page</h4>
+				<hr />
+				<Row>
+					<Col md={4}>
+						<Card style={{ width: "18rem" }}>
+							<Card.Img variant="top" src="holder.js/100px180" />
+							<Card.Body>
+								<Card.Text>Upload your event visuals here</Card.Text>
+								<Button variant="primary">Upload</Button>
+							</Card.Body>
+						</Card>
+					</Col>
+					<Col md={8}>
+						<Form onSubmit={createEvent}>
+							<Row className="mb-3">
+								<Form.Group as={Col} controlId="formEventName">
+									<Form.Label>Event Name</Form.Label>
+									<Form.Control name="eventName" defaultValue="Hello World" />
+								</Form.Group>
+
+								<Form.Group as={Col} controlId="formEventCreator">
+									<Form.Label>Event Creator</Form.Label>
+									<Form.Control name="eventCreator" defaultValue={account} />
+								</Form.Group>
+							</Row>
+							<Row className="mb-3">
+								<Form.Group as={Col} controlId="formMaxTickets">
+									<Form.Label>Maximum tickets</Form.Label>
+									<Form.Control name="maxTickets" defaultValue="100" />
+								</Form.Group>
+
+								<Form.Group as={Col} controlId="formTicketPerAddress">
+									<Form.Label>Max tickets per address</Form.Label>
+									<Form.Control name="ticketsPerAddress" defaultValue="10" />
+								</Form.Group>
+							</Row>
+
+							<Row className="mb-3">
+								<Form.Group as={Col} controlId="formTicketPrice">
+									<Form.Label>Ticket Price</Form.Label>
+									<Form.Control name="ticketPrice" defaultValue={ticketPrice} disabled={ticketPriceDisabled} />
+								</Form.Group>
+								<Form.Group as={Col} controlId="formExpirationDuration">
+									<Form.Label>Event Expires on</Form.Label>
+									<Form.Control name="expirationDuration" defaultValue="10100" />
+								</Form.Group>
+							</Row>
+							<Row className="mb-3">
+								<Form.Group as={Col} controlId="formPurchaseToken">
+									<Form.Label>Purchase Token</Form.Label>
+									<Form.Control name="purchaseToken" defaultValue={purchaseTokenValue} disabled={purchaseTokenDisabled} />
+								</Form.Group>
+								<Form.Group as={Col} controlId="formGatingNFT">
+									<Form.Label>Gating NFT address</Form.Label>
+									<Form.Control name="gatingNFT" defaultValue="0x0000000000000000000000000000000000000000" />
+								</Form.Group>
+							</Row>
+
+							<Form.Group className="mb-3" id="formGridCheckbox">
+								<Form.Check type="switch" id="custom-switch" label="Set as a free event" onChange={handleFreeEvent} />
+							</Form.Group>
+
+							<Button variant="primary" type="submit">
+								Submit
+							</Button>
+						</Form>
+					</Col>
+				</Row>
+			</Container>
 		</>
 	);
 }
