@@ -98,20 +98,15 @@ export function CreateEventWizard() {
 	const connectedOrNot = useEagerConnect();
 	// console.log("Eager connect succeeded?", connectedOrNot);
 
-	const handleFreeEvent = async () => {
-		purchaseTokenDisabled ? setPurchaseTokenDisabled(false) : setPurchaseTokenDisabled(true);
-		if (purchaseTokenValue == "0xE097d6B3100777DC31B34dC2c58fB524C2e76921") {
-			setPurchaseTokenValue("0x0000000000000000000000000000000000000000");
-		} else {
-			setPurchaseTokenValue("0xE097d6B3100777DC31B34dC2c58fB524C2e76921");
-		}
+	const handleFreeEvent = () => {
+		setPurchaseTokenDisabled(!purchaseTokenDisabled);
+		setTicketPriceDisabled(!ticketPriceDisabled);
 
-		ticketPriceDisabled ? setTicketPriceDisabled(false) : setTicketPriceDisabled(true);
-		if (ticketPrice == "10") {
-			setTicketPrice("0");
-		} else {
-			setTicketPrice("10");
-		}
+		const newPurchaseTokenValue = purchaseTokenValue === "0xE097d6B3100777DC31B34dC2c58fB524C2e76921" ? "0x0000000000000000000000000000000000000000" : "0xE097d6B3100777DC31B34dC2c58fB524C2e76921";
+		setPurchaseTokenValue(newPurchaseTokenValue);
+
+		const newTicketPrice = ticketPrice === "10" ? "0" : "10";
+		setTicketPrice(newTicketPrice);
 	};
 
 	const createEvent = async (e) => {
@@ -248,7 +243,7 @@ export function CreateEventWizard() {
 								<label htmlFor="cover-photo" className="block text-sm font-medium leading-6 text-gray-900">
 									Cover photo
 								</label>
-								<div className="flex flex-col md:flex-row gap-1.5 md:py-4">
+								{/* <div className="flex flex-col md:flex-row gap-1.5 md:py-4">
 									<div className="flex-grow">
 										{previewURL ? (
 											<div className="mx-auto w-80">
@@ -272,20 +267,34 @@ export function CreateEventWizard() {
 											Upload file
 										</button>
 									</div>
-								</div>
-								{/* <div className="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 px-6 py-10">
-									<div className="text-center">
-										<PhotoIcon className="mx-auto h-12 w-12 text-gray-300" aria-hidden="true" />
-										<div className="mt-4 flex text-sm leading-6 text-gray-600">
-											<label htmlFor="file-upload" className="relative cursor-pointer rounded-md bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500">
-												<span>Upload a file</span>
-												<input id="file-upload" name="file-upload" type="file" className="sr-only" />
-											</label>
-											<p className="pl-1">or drag and drop</p>
-										</div>
-										<p className="text-xs leading-5 text-gray-600">PNG, JPG, GIF up to 10MB</p>
-									</div>
 								</div> */}
+								<div className="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 px-6 py-10">
+									{previewURL ? (
+										<div className="mx-auto w-80">
+											<Image alt="file uploader preview" objectFit="cover" src={previewURL} width={320} height={218} layout="fixed" />
+										</div>
+									) : (
+										<div className="text-center">
+											<PhotoIcon className="mx-auto h-12 w-12 text-gray-300" aria-hidden="true" />
+											<div className="mt-4 flex text-sm leading-6 text-gray-600">
+												<label htmlFor="file-upload" className="relative cursor-pointer rounded-md bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500">
+													<span>Upload a file</span>
+													<input id="file-upload" name="file" type="file" className="sr-only" onChange={onFileUploadChange} />
+												</label>
+												<p className="pl-1">or drag and drop</p>
+											</div>
+											<p className="text-xs leading-5 text-gray-600">PNG, JPG, GIF up to 10MB</p>
+										</div>
+									)}
+								</div>
+								<div className="flex mt-4 md:mt-0 md:flex-col justify-center gap-1.5">
+									<button disabled={!previewURL} onClick={onCancelFile} className="w-1/2 px-4 py-3 text-sm font-medium text-white transition-colors duration-300 bg-gray-700 rounded-sm md:w-auto md:text-base disabled:bg-gray-400 hover:bg-gray-600">
+										Cancel file
+									</button>
+									<button disabled={!previewURL} onClick={onUploadFile} className="w-1/2 px-4 py-3 text-sm font-medium text-white transition-colors duration-300 bg-gray-700 rounded-sm md:w-auto md:text-base disabled:bg-gray-400 hover:bg-gray-600">
+										Upload file
+									</button>
+								</div>
 							</div>
 							<div className="sm:col-span-4">
 								<label htmlFor="website" className="block text-sm font-medium leading-6 text-gray-900">
