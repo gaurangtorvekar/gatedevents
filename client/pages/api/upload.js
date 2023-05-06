@@ -4,7 +4,7 @@ import * as FileType from "file-type";
 
 const memoryStorage = multer.memoryStorage();
 const fileFilter = (req, file, cb) => {
-	const allowedMimes = ["image/jpeg", "image/png", "image/gif", "image/webp", "image/svg+xml"];
+	const allowedMimes = ["image/jpeg", "image/png", "image/gif", "image/webp", "image/svg+xml", "application/json"];
 
 	if (allowedMimes.includes(file.mimetype)) {
 		cb(null, true);

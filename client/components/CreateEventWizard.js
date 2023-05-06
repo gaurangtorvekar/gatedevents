@@ -30,22 +30,23 @@ export function CreateEventWizard() {
 
 	const [file, setFile] = useState(null);
 	const [previewURL, setPreviewURL] = useState(null);
+	const [uploadedURL, setUploadedURL] = useState(null);
 
-	const [value, setValue] = useState({
-		startDate: null,
-		endDate: null,
+	const [dateValue, setDateValue] = useState({
+		startDate: new Date(),
+		endDate: new Date(),
 	});
 
-	const handleValueChange = (newValue) => {
+	const handleDateValueChange = (newValue) => {
 		console.log("newValue:", newValue);
-		setValue(newValue);
+		setDateValue(newValue);
 	};
 
 	const onFileUploadChange = (e) => {
 		e.preventDefault();
-		console.log("From fileuploadchange");
 
 		const file = e.target.files?.[0];
+		console.log("From fileuploadchange", file.name);
 
 		if (!file?.type.startsWith("image")) {
 			alert("Select a valid file type");
@@ -87,9 +88,10 @@ export function CreateEventWizard() {
 			});
 
 			const { cid } = await res.json();
-			console.log("File uploaded successfully", cid);
+			console.log("File uploaded successfully", `https://${cid}.ipfs.w3s.link/${file.name}`);
 			setFile(null);
 			setPreviewURL(null);
+			setUploadedURL(`https://${cid}.ipfs.w3s.link/${file.name}`);
 		} catch (e) {
 			console.log("Error = ", e);
 		}
@@ -109,32 +111,101 @@ export function CreateEventWizard() {
 		setTicketPrice(newTicketPrice);
 	};
 
+	const createEventJSON = async (jsonObject) => {
+		console.log(jsonObject);
+		try {
+			const jsonFile = new File([JSON.stringify(jsonObject)], `${jsonObject.eventCreator}.json`, { type: "application/json" });
+			const formData = new FormData();
+			formData.append("media", jsonFile);
+			const res = await fetch("/api/upload", {
+				method: "POST",
+				body: formData,
+			});
+			const { cid } = await res.json();
+			console.log("File uploaded successfully", `https://${cid}.ipfs.w3s.link/${jsonFile.name}`);
+			return cid;
+		} catch (error) {
+			console.error("Error while uploading the JSON object:", error);
+			throw error;
+		}
+	};
+
 	const createEvent = async (e) => {
 		e.preventDefault();
-
 		console.log("Inside create events function");
-		try {
-			const { ethereum } = window;
-			const data = {
+
+		const createEventData = () => {
+			console.log("Inside createEventData");
+			const baseData = {
 				eventName: e.target.eventName.value,
+				email: e.target.organiserEmail.value,
+				description: e.target.eventDescription.value,
+				startDate: dateValue.startDate,
+				endDate: dateValue.endDate,
 				eventCreator: e.target.eventCreator.value,
 				maxTickets: e.target.maxTickets.value,
 				ticketsPerAddress: e.target.ticketsPerAddress.value,
-				ticketPrice: e.target.ticketPrice.value,
-				expirationDuration: e.target.expirationDuration.value,
-				purchaseToken: e.target.purchaseToken.value,
 				gatingNFT: e.target.gatingNFT.value,
 			};
+
+			let onlineData, inPersonData, paidData;
+			if (!inPerson) {
+				onlineData = {
+					eventPlatform: e.target.eventPlatform.value,
+					eventWebsite: e.target.eventWebsite.value,
+				};
+			}
+
+			if (inPerson) {
+				inPersonData = {
+					country: e.target.eventCountry.value,
+					eventStreet: e.target.eventStreet.value,
+					eventCity: e.target.eventCity.value,
+					eventState: e.target.eventState.value,
+					eventPostCode: e.target.eventPostcode.value,
+				};
+			}
+
+			if (!freeEvent) {
+				paidData = {
+					ticketPrice: e.target.ticketPrice.value,
+					purchaseToken: e.target.purchaseToken.value,
+				};
+			}
+
+			console.log("Base data = ", baseData);
+			return {
+				...baseData,
+				...(inPerson ? inPersonData : onlineData),
+				...(freeEvent ? {} : paidData),
+			};
+		};
+
+		try {
+			const { ethereum } = window;
+			const data = createEventData();
+			console.log(data);
+
 			if (ethereum) {
 				const provider = new ethers.providers.Web3Provider(ethereum);
 				const signer = provider.getSigner();
-				let factory_contract_instance = new ethers.Contract(event_factory_contract, event_factory_abi, signer);
+				const factoryContractInstance = new ethers.Contract(event_factory_contract, event_factory_abi, signer);
+
 				if (account) {
-					let tx = await factory_contract_instance.createNewEvent(data.eventCreator, data.ticketsPerAddress, data.expirationDuration, data.maxTickets, data.ticketPrice, data.eventName, data.purchaseToken, data.gatingNFT);
+					const zeroAddress = "0x0000000000000000000000000000000000000000";
+					const ticketPrice = freeEvent ? 0 : data.ticketPrice;
+					const purchaseToken = freeEvent ? zeroAddress : data.purchaseToken;
+
+					//TODO - change the smart contract to accept dates
+					const tx = await factoryContractInstance.createNewEvent(data.eventCreator, data.ticketsPerAddress, 363, data.maxTickets, ticketPrice, data.eventName, purchaseToken, data.gatingNFT);
+
 					console.log("New event = ", tx);
 					setShowMinedToast(true);
-					let create_receipt = await tx.wait();
-					if (create_receipt) {
+
+					const createReceipt = await tx.wait();
+
+					if (createReceipt) {
+						await createEventJSON(data);
 						router.push("/");
 					}
 				}
@@ -160,7 +231,7 @@ export function CreateEventWizard() {
 				</Alert>
 			) : null}
 
-			<form onSubmit={(e) => e.preventDefault()}>
+			<Form onSubmit={createEvent}>
 				<div className="space-y-12">
 					<div className="grid grid-cols-1 gap-x-8 gap-y-10 border-b border-gray-900/10 pb-12 md:grid-cols-3">
 						<div>
@@ -176,14 +247,14 @@ export function CreateEventWizard() {
 								<div className="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 px-6 py-10">
 									{previewURL ? (
 										<div className="mx-auto w-80">
-											<Image alt="file uploader preview" objectFit="cover" src={previewURL} width={250} height={170} layout="fixed" />
+											<Image alt="file uploader preview" src={previewURL} width={250} height={170} layout="intrinsic" />
 										</div>
 									) : (
 										<div className="text-center">
 											<PhotoIcon className="mx-auto h-12 w-12 text-gray-300" aria-hidden="true" />
 											<div className="mt-4 flex text-sm leading-6 text-gray-600">
 												<label htmlFor="file-upload" className="relative cursor-pointer rounded-md bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500">
-													<span>Upload a file</span>
+													<span>Select a file</span>
 													<input id="file-upload" name="file" type="file" className="sr-only" onChange={onFileUploadChange} />
 												</label>
 												<p className="pl-1">or drag and drop</p>
@@ -211,7 +282,7 @@ export function CreateEventWizard() {
 								</label>
 								<div className="mt-2">
 									<div className="flex rounded-md shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 sm:max-w-md">
-										<input id="email" name="organiserEmail" type="text" defaultValue="Hello World" className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
+										<input name="eventName" type="text" defaultValue="Hello World" className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
 									</div>
 								</div>
 							</div>
@@ -220,7 +291,15 @@ export function CreateEventWizard() {
 									Organiser Email address
 								</label>
 								<div className="mt-2">
-									<input id="email" name="organiserEmail" type="email" autoComplete="email" placeholder="test@example.com" className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
+									<input name="organiserEmail" type="email" autoComplete="email" placeholder="test@example.com" defaultValue="info@example.com" className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
+								</div>
+							</div>
+							<div className="sm:col-span-4">
+								<label htmlFor="email" className="block text-sm font-medium leading-6 text-gray-900">
+									Organiser account
+								</label>
+								<div className="mt-2">
+									<input name="eventCreator" type="text" defaultValue={account} placeholder="test@example.com" className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
 								</div>
 							</div>
 							<div className="col-span-full">
@@ -228,7 +307,7 @@ export function CreateEventWizard() {
 									Description
 								</label>
 								<div className="mt-2">
-									<textarea id="about" name="eventDescription" placeholder="Example description" rows={3} className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" defaultValue={""} />
+									<textarea name="eventDescription" placeholder="Example description" defaultValue="Hello world description" rows={3} className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
 								</div>
 							</div>
 							<div className="sm:col-span-3">
@@ -236,7 +315,7 @@ export function CreateEventWizard() {
 									Dates
 								</label>
 								<div className="mt-2">
-									<Datepicker primaryColor={"sky"} value={value} onChange={handleValueChange} showShortcuts={true} className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
+									<Datepicker primaryColor={"sky"} name="eventDates" value={dateValue} displayFormat={"DD/MM/YYYY"} onChange={handleDateValueChange} showShortcuts={true} className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
 								</div>
 							</div>
 						</div>
@@ -264,7 +343,7 @@ export function CreateEventWizard() {
 											Country
 										</label>
 										<div className="mt-2">
-											<select id="country" name="country" autoComplete="country-name" className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6">
+											<select id="country" name="eventCountry" autoComplete="country-name" defaultValue="United States" className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6">
 												<option>United States</option>
 												<option>United Kingdom</option>
 												<option>Mexico</option>
@@ -277,7 +356,7 @@ export function CreateEventWizard() {
 											Street address
 										</label>
 										<div className="mt-2">
-											<input type="text" name="street-address" id="street-address" autoComplete="street-address" className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
+											<input type="text" name="eventStreet" defaultValue="Example road" autoComplete="street-address" className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
 										</div>
 									</div>
 
@@ -286,7 +365,7 @@ export function CreateEventWizard() {
 											City
 										</label>
 										<div className="mt-2">
-											<input type="text" name="city" id="city" autoComplete="address-level2" className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
+											<input type="text" name="eventCity" defaultValue="Example city" autoComplete="address-level2" className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
 										</div>
 									</div>
 
@@ -295,7 +374,7 @@ export function CreateEventWizard() {
 											State / Province
 										</label>
 										<div className="mt-2">
-											<input type="text" name="region" id="region" autoComplete="address-level1" className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
+											<input type="text" name="eventState" defaultValue="Example state" autoComplete="address-level1" className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
 										</div>
 									</div>
 
@@ -304,7 +383,7 @@ export function CreateEventWizard() {
 											ZIP / Postal code
 										</label>
 										<div className="mt-2">
-											<input type="text" name="postal-code" id="postal-code" autoComplete="postal-code" className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
+											<input type="text" name="eventPostcode" defaultValue="Example code" autoComplete="postal-code" className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
 										</div>
 									</div>
 								</>
@@ -316,7 +395,7 @@ export function CreateEventWizard() {
 										</label>
 										<div className="mt-2">
 											<div className="flex rounded-md shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 sm:max-w-md">
-												<input type="text" name="website" id="website" className="block flex-1 border-0 bg-transparent py-1.5 pl-1 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6" />
+												<input type="text" name="eventPlatform" defaultValue="Zoom" className="block flex-1 border-0 bg-transparent py-1.5 pl-1 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6" />
 											</div>
 										</div>
 									</div>
@@ -326,7 +405,7 @@ export function CreateEventWizard() {
 										</label>
 										<div className="mt-2">
 											<div className="flex rounded-md shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 sm:max-w-md">
-												<input type="text" name="website" id="website" className="block flex-1 border-0 bg-transparent py-1.5 pl-1 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6" />
+												<input type="text" name="eventWebsite" defaultValue="https://example.com" className="block flex-1 border-0 bg-transparent py-1.5 pl-1 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6" />
 											</div>
 										</div>
 									</div>
@@ -351,10 +430,10 @@ export function CreateEventWizard() {
 						<div className="grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2">
 							<div className="sm:col-span-3">
 								<label htmlFor="first-name" className="block text-sm font-medium leading-6 text-gray-900">
-									Number of Tickets
+									Total number of Tickets
 								</label>
 								<div className="mt-2">
-									<input type="text" name="first-name" id="first-name" autoComplete="given-name" className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
+									<input type="text" name="maxTickets" defaultValue="100" autoComplete="given-name" className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
 								</div>
 							</div>
 
@@ -363,7 +442,17 @@ export function CreateEventWizard() {
 									Maximum tickets per address
 								</label>
 								<div className="mt-2">
-									<input type="text" name="last-name" id="last-name" autoComplete="family-name" className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
+									<input type="text" name="ticketsPerAddress" defaultValue="10" autoComplete="family-name" className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
+								</div>
+							</div>
+							<div className="sm:col-span-4">
+								<label htmlFor="website" className="block text-sm font-medium leading-6 text-gray-900">
+									Gating NFT Opensea Link
+								</label>
+								<div className="mt-2">
+									<div className="flex rounded-md shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 sm:max-w-md">
+										<input type="text" name="gatingNFT" defaultValue="0x0000000000000000000000000000000000000000" className="block flex-1 border-0 bg-transparent py-1.5 pl-1 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6" />
+									</div>
 								</div>
 							</div>
 							{freeEvent ? null : (
@@ -373,7 +462,7 @@ export function CreateEventWizard() {
 											Ticket Price
 										</label>
 										<div className="mt-2">
-											<input type="text" name="first-name" id="first-name" autoComplete="given-name" className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
+											<input type="text" name="ticketPrice" defaultValue="10" autoComplete="given-name" className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
 										</div>
 									</div>
 
@@ -382,7 +471,7 @@ export function CreateEventWizard() {
 											Purchase Token
 										</label>
 										<div className="mt-2">
-											<input type="text" name="last-name" id="last-name" autoComplete="family-name" className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
+											<input type="text" name="purchaseToken" defaultValue="0xE097d6B3100777DC31B34dC2c58fB524C2e76921" autoComplete="family-name" className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
 										</div>
 									</div>
 								</>
@@ -395,7 +484,6 @@ export function CreateEventWizard() {
 							<h2 className="text-base font-semibold leading-7 text-gray-900">Notifications</h2>
 							<p className="mt-1 text-sm leading-6 text-gray-600">We'll always let you know about important changes, but you pick what else you want to hear about.</p>
 						</div>
-
 						<div className="max-w-2xl space-y-10 md:col-span-2">
 							<fieldset>
 								<legend className="text-sm font-semibold leading-6 text-gray-900">By Email</legend>
@@ -464,14 +552,11 @@ export function CreateEventWizard() {
 				</div>
 
 				<div className="mt-6 flex items-center justify-end gap-x-6">
-					<button type="button" className="text-sm font-semibold leading-6 text-gray-900">
-						Cancel
-					</button>
 					<button type="submit" className="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
 						Save
 					</button>
 				</div>
-			</form>
+			</Form>
 			<hr />
 			<Container>
 				<h4>Event creation page</h4>
