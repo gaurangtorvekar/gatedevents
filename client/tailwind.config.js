@@ -11,11 +11,12 @@ module.exports = {
 		"./src/**/*.{js,ts,jsx,tsx,mdx}",
 	],
 	theme: {
-		extend: {},
+		extend: { aspectRatio: ["responsive"] },
 	},
 	plugins: [
 		// ...
 		require("@tailwindcss/forms"),
 		require("flowbite/plugin"),
+		require("@tailwindcss/aspect-ratio"),
 	],
 };

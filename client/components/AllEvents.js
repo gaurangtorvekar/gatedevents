@@ -35,26 +35,6 @@ export function AllEvents() {
 		}
 	};
 
-	const createEvent = async () => {
-		console.log("Inside create events function");
-		try {
-			const { ethereum } = window;
-			if (ethereum) {
-				const provider = new ethers.providers.Web3Provider(ethereum);
-				const signer = provider.getSigner();
-				let factory_contract_instance = new ethers.Contract(event_factory_contract, event_factory_abi, signer);
-				if (account) {
-					let tx = await factory_contract_instance.createNewEvent(account, 5, 10000, 100, 10, "Hello World", "0xE097d6B3100777DC31B34dC2c58fB524C2e76921", "0x0000000000000000000000000000000000000000");
-					console.log("New event = ", tx);
-				}
-			} else {
-				console.log("Could not find ethereum object");
-			}
-		} catch (e) {
-			console.log("Error while finding events", e);
-		}
-	};
-
 	useEffect(() => {
 		findEvents();
 	}, [account]);
@@ -63,32 +43,16 @@ export function AllEvents() {
 		<>
 			<NavBarConnect />
 
-			<div className="flex flex-row">
-				<div className="basis-1/4 py-2">
-					<h3>List of events</h3>
-				</div>
-				<div className="basis-3/4 grid py-2 gap-4">
-					{events.map((item, index) => (
-						<div key={index} className=" col-span-2 overflow-hidden rounded-lg bg-white shadow">
-							<div className="px-1 py-1 sm:px-2">
-								<div className="ml-4 mt-4">
-									<h3 className="text-base font-semibold leading-6 text-gray-900">Job Postings</h3>
-									<p className="mt-1 text-sm text-gray-500">Lorem ipsum dolor sit amet consectetur adipisicing elit quam corrupti consectetur.</p>
-									<p className="mt-1 text-sm text-gray-500">{item}</p>
-								</div>
-							</div>
-							<div className="bg-gray-50 px-4 py-5 sm:p-6">
-								<div className="ml-4 mt-4 flex-shrink-0 py-2">
-									<Link href={`events/${item}`}>
-										<button type="button" className="relative inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-											Details
-										</button>
-									</Link>
-								</div>
-							</div>
+			<div className="grid grid-cols-2 gap-4">
+				{events.map((item, index) => (
+					<Link href={`events/${item}`} className="no-underline flex flex-col items-center bg-white border border-gray-200 rounded-lg shadow md:flex-row md:max-w-xl hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700">
+						<img className="object-cover w-full rounded-t-lg h-52 md:h-auto md:w-48 md:rounded-none md:rounded-l-lg" src="https://images.freeimages.com/images/large-previews/8ca/peerless-chain-1-1641825.jpg" alt="" />
+						<div className="flex flex-col justify-between p-4 leading-normal">
+							<h5 className="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Noteworthy technology acquisitions 2021</h5>
+							<p className="mb-3 font-normal text-gray-700 dark:text-gray-400">Here are the biggest enterprise technology acquisitions of 2021 so far, in reverse chronological order.</p>
 						</div>
-					))}
-				</div>
+					</Link>
+				))}
 			</div>
 		</>
 	);
