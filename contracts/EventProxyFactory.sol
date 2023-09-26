@@ -22,25 +22,31 @@ contract EventProxyFactory is Ownable {
 
     // TODO - add onlyOwner to this function
     function createNewEvent(
-        address payable _eventCreator,
+        address payable _eventAdmin,
         uint256 _ticketsPerAddress,
-        uint256 _expirationDuration,
+        uint256 _startDate,
+        uint256 _endDate,
         uint256 _maxTickets,
         uint256 _ticketPrice,
         string calldata _eventName,
         address _purchaseTokenAddress,
-        address _gatingNFT
+        address _gatingNFT,
+        uint8 _eventType,
+        uint8 _eventPlatform
     ) external payable returns (address instance) {
         instance = Clones.clone(implementationContract);
         Event(instance).initialize(
-            _eventCreator,
+            _eventAdmin,
             _ticketsPerAddress,
-            _expirationDuration,
+            _startDate,
+            _endDate,
             _maxTickets,
             _ticketPrice,
             _eventName,
             _purchaseTokenAddress,
-            _gatingNFT
+            _gatingNFT,
+            _eventType,
+            _eventPlatform
         );
 
         allClones.push(instance);

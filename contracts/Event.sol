@@ -28,11 +28,13 @@ contract Event is
 
     CountersUpgradeable.Counter private _tokenIdCounter;
     address public platformFeeAddress = 0xfA205A82715F144096B75Ccc4C543A8a2D4CcfaF;
-    address public eventCreator;
+    address public eventAdmin;
     uint256 public maxTickets;
     uint256 public ticketsPerAddress;
     uint256 public expirationDuration;
     uint256 public ticketPrice;
+    uint256 public startDate;
+    uint256 public endDate;
     // Setting a default value of 5% platform fees - change later
     uint256 public platformFeesPercentInBPS = 500;
     // TODO - remove this param because it already exists in the NFT name
@@ -40,7 +42,29 @@ contract Event is
     IERC20 public purchaseToken;
     IERC721 public gatingNFT;
 
+    enum EventTypes {
+        InPerson,
+        Online
+    }
+    enum EventPlatforms {
+        Zoom,
+        GoogleMeet,
+        MicrosoftTeams,
+        Skype,
+        Other
+    }
+
+    EventTypes public eventType;
+    EventPlatforms public eventPlatform;
+
     mapping(address => uint256) public ticketsCounter;
+
+    // This will store the keys so that we can retrieve the additionalInfo mapping later
+    string[] public infoKeys;
+    mapping(string => string) public additionalInfo;
+
+    //Create an event to emit when an NFT is safe minted
+    event TicketMinted(address indexed _to, uint256 indexed _tokenId);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -50,23 +74,29 @@ contract Event is
     // TODO - Cater to gatingNFT as 1155
     // TODO - Validate the inputs
     function initialize(
-        address payable _eventCreator,
+        address payable _eventAdmin,
         uint256 _ticketsPerAddress,
-        uint256 _expirationDuration,
+        uint256 _startDate,
+        uint256 _endDate,
         uint256 _maxTickets,
         uint256 _ticketPrice,
         string calldata _eventName,
         address _purchaseTokenAddress,
-        address _gatingNFT
+        address _gatingNFT,
+        uint8 _eventType,
+        uint8 _eventPlatform
     ) public initializer {
-        eventCreator = _eventCreator;
+        eventAdmin = _eventAdmin;
         ticketsPerAddress = _ticketsPerAddress;
+        startDate = _startDate;
+        endDate = _endDate;
         maxTickets = _maxTickets;
-        expirationDuration = _expirationDuration;
         ticketPrice = _ticketPrice;
         eventName = _eventName;
         purchaseToken = IERC20(_purchaseTokenAddress);
         gatingNFT = IERC721(_gatingNFT);
+        eventType = EventTypes(_eventType);
+        eventPlatform = EventPlatforms(_eventPlatform);
         //Had to do this because the proxy clone sets this to 0x0000
         platformFeeAddress = 0xfA205A82715F144096B75Ccc4C543A8a2D4CcfaF;
 
@@ -77,8 +107,8 @@ contract Event is
         __AccessControl_init();
 
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _grantRole(MINTER_ROLE, _eventCreator);
-        _grantRole(CREATOR_ROLE, _eventCreator);
+        _grantRole(MINTER_ROLE, _eventAdmin);
+        _grantRole(CREATOR_ROLE, _eventAdmin);
     }
 
     function pause() public onlyRole(CREATOR_ROLE) {
@@ -103,7 +133,7 @@ contract Event is
             uint256 platformFees = (totalPrice * platformFeesPercentInBPS) / 10000;
             uint256 creatorFees = totalPrice - platformFees;
 
-            _tranferERC20Amount(msg.sender, eventCreator, creatorFees);
+            _tranferERC20Amount(msg.sender, eventAdmin, creatorFees);
             _tranferERC20Amount(msg.sender, platformFeeAddress, platformFees);
         }
 
@@ -117,10 +147,35 @@ contract Event is
         uint256 tokenId = _tokenIdCounter.current();
         _tokenIdCounter.increment();
         _safeMint(to, tokenId);
+        emit TicketMinted(to, tokenId);
     }
 
     function _tranferERC20Amount(address _sender, address _receiver, uint256 _amount) internal {
         purchaseToken.safeTransferFrom(_sender, _receiver, _amount);
+    }
+
+    function setAdditionalInfo(string[] memory keys, string[] memory values) external onlyRole(CREATOR_ROLE) {
+        require(keys.length == values.length, "Keys and values length mismatch");
+
+        for (uint256 i = 0; i < keys.length; i++) {
+            // Check if this key is a new key and hasn't been set before
+            if (bytes(additionalInfo[keys[i]]).length == 0) {
+                infoKeys.push(keys[i]);
+            }
+            additionalInfo[keys[i]] = values[i];
+        }
+    }
+
+    function getAllAdditionalInfo() external view returns (string[] memory keys, string[] memory values) {
+        keys = new string[](infoKeys.length);
+        values = new string[](infoKeys.length);
+
+        for (uint256 i = 0; i < infoKeys.length; i++) {
+            keys[i] = infoKeys[i];
+            values[i] = additionalInfo[infoKeys[i]];
+        }
+
+        return (keys, values);
     }
 
     // TODO - Validate the inputs for all the set functions
