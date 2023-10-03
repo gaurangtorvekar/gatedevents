@@ -13,3 +13,5 @@ artifacts
 
 #Remix file
 compiler_config.json
+/client/uploads/
+/contracts/.deps/

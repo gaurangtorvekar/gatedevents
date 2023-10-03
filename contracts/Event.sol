@@ -54,6 +54,20 @@ contract Event is
         Other
     }
 
+    struct EventConfig {
+        address payable eventAdmin;
+        uint256 ticketsPerAddress;
+        uint256 startDate;
+        uint256 endDate;
+        uint256 maxTickets;
+        uint256 ticketPrice;
+        string eventName;
+        address purchaseTokenAddress;
+        address gatingNFT;
+        uint8 eventType;
+        uint8 eventPlatform;
+    }
+
     EventTypes public eventType;
     EventPlatforms public eventPlatform;
 
@@ -73,42 +87,30 @@ contract Event is
 
     // TODO - Cater to gatingNFT as 1155
     // TODO - Validate the inputs
-    function initialize(
-        address payable _eventAdmin,
-        uint256 _ticketsPerAddress,
-        uint256 _startDate,
-        uint256 _endDate,
-        uint256 _maxTickets,
-        uint256 _ticketPrice,
-        string calldata _eventName,
-        address _purchaseTokenAddress,
-        address _gatingNFT,
-        uint8 _eventType,
-        uint8 _eventPlatform
-    ) public initializer {
-        eventAdmin = _eventAdmin;
-        ticketsPerAddress = _ticketsPerAddress;
-        startDate = _startDate;
-        endDate = _endDate;
-        maxTickets = _maxTickets;
-        ticketPrice = _ticketPrice;
-        eventName = _eventName;
-        purchaseToken = IERC20(_purchaseTokenAddress);
-        gatingNFT = IERC721(_gatingNFT);
-        eventType = EventTypes(_eventType);
-        eventPlatform = EventPlatforms(_eventPlatform);
+    function initialize(EventConfig memory config) public initializer {
+        eventAdmin = config.eventAdmin;
+        ticketsPerAddress = config.ticketsPerAddress;
+        startDate = config.startDate;
+        endDate = config.endDate;
+        maxTickets = config.maxTickets;
+        ticketPrice = config.ticketPrice;
+        eventName = config.eventName;
+        purchaseToken = IERC20(config.purchaseTokenAddress);
+        gatingNFT = IERC721(config.gatingNFT);
+        eventType = EventTypes(config.eventType);
+        eventPlatform = EventPlatforms(config.eventPlatform);
         //Had to do this because the proxy clone sets this to 0x0000
         platformFeeAddress = 0xfA205A82715F144096B75Ccc4C543A8a2D4CcfaF;
 
-        __ERC721_init(_eventName, "");
+        __ERC721_init(config.eventName, "");
         __ERC721Enumerable_init();
         __Pausable_init();
         __ERC721Burnable_init();
         __AccessControl_init();
 
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _grantRole(MINTER_ROLE, _eventAdmin);
-        _grantRole(CREATOR_ROLE, _eventAdmin);
+        _grantRole(MINTER_ROLE, config.eventAdmin);
+        _grantRole(CREATOR_ROLE, config.eventAdmin);
     }
 
     function pause() public onlyRole(CREATOR_ROLE) {
@@ -213,6 +215,22 @@ contract Event is
 
     function setTicketPrice(uint256 _price) external onlyRole(CREATOR_ROLE) {
         ticketPrice = _price;
+    }
+
+    function setEventType(uint8 _eventType) external onlyRole(CREATOR_ROLE) {
+        eventType = EventTypes(_eventType);
+    }
+
+    function setEventPlatform(uint8 _eventPlatform) external onlyRole(CREATOR_ROLE) {
+        eventPlatform = EventPlatforms(_eventPlatform);
+    }
+
+    function setStartDate(uint256 _startDate) external onlyRole(CREATOR_ROLE) {
+        startDate = _startDate;
+    }
+
+    function setEndDate(uint256 _endDate) external onlyRole(CREATOR_ROLE) {
+        endDate = _endDate;
     }
 
     function _baseURI() internal pure override returns (string memory) {

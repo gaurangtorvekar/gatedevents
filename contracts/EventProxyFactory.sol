@@ -23,34 +23,46 @@ contract EventProxyFactory is Ownable {
     // TODO - add onlyOwner to this function
     function createNewEvent(
         address payable _eventAdmin,
-        uint256 _ticketsPerAddress,
         uint256 _startDate,
         uint256 _endDate,
-        uint256 _maxTickets,
-        uint256 _ticketPrice,
         string calldata _eventName,
         address _purchaseTokenAddress,
         address _gatingNFT,
-        uint8 _eventType,
         uint8 _eventPlatform
-    ) external payable returns (address instance) {
+    ) external payable onlyOwner returns (address instance) {
         instance = Clones.clone(implementationContract);
-        Event(instance).initialize(
-            _eventAdmin,
-            _ticketsPerAddress,
-            _startDate,
-            _endDate,
-            _maxTickets,
-            _ticketPrice,
-            _eventName,
-            _purchaseTokenAddress,
-            _gatingNFT,
-            _eventType,
-            _eventPlatform
-        );
+
+        // Event.EventConfig memory config = Event.EventConfig({
+        //     eventAdmin: _eventAdmin,
+        //     ticketsPerAddress: _ticketsPerAddress,
+        //     startDate: _startDate,
+        //     endDate: _endDate,
+        //     maxTickets: _maxTickets,
+        //     ticketPrice: _ticketPrice,
+        //     eventName: _eventName,
+        //     purchaseTokenAddress: _purchaseTokenAddress,
+        //     gatingNFT: _gatingNFT,
+        //     eventType: _eventType,
+        //     eventPlatform: _eventPlatform
+        // });
+
+        Event.EventConfig memory config = Event.EventConfig({
+            eventAdmin: _eventAdmin,
+            ticketsPerAddress: 0,
+            startDate: _startDate,
+            endDate: _endDate,
+            maxTickets: 0,
+            ticketPrice: 0,
+            eventName: _eventName,
+            purchaseTokenAddress: _purchaseTokenAddress,
+            gatingNFT: _gatingNFT,
+            eventType: 0,
+            eventPlatform: _eventPlatform
+        });
+
+        Event(instance).initialize(config);
 
         allClones.push(instance);
-        //List of all events created by this operator
         operatorEvents[msg.sender].push(instance);
         emit NewClone(instance);
         return instance;
