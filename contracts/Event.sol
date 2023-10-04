@@ -2,8 +2,6 @@
 pragma solidity >=0.8.0;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721BurnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
@@ -12,14 +10,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
-contract Event is
-    Initializable,
-    ERC721Upgradeable,
-    ERC721EnumerableUpgradeable,
-    PausableUpgradeable,
-    AccessControlUpgradeable,
-    ERC721BurnableUpgradeable
-{
+contract Event is Initializable, ERC721Upgradeable, AccessControlUpgradeable, ERC721BurnableUpgradeable {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant CREATOR_ROLE = keccak256("CREATOR_ROLE");
 
@@ -103,22 +94,12 @@ contract Event is
         platformFeeAddress = 0xfA205A82715F144096B75Ccc4C543A8a2D4CcfaF;
 
         __ERC721_init(config.eventName, "");
-        __ERC721Enumerable_init();
-        __Pausable_init();
         __ERC721Burnable_init();
         __AccessControl_init();
 
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(MINTER_ROLE, config.eventAdmin);
         _grantRole(CREATOR_ROLE, config.eventAdmin);
-    }
-
-    function pause() public onlyRole(CREATOR_ROLE) {
-        _pause();
-    }
-
-    function unpause() public onlyRole(CREATOR_ROLE) {
-        _unpause();
     }
 
     // TODO - Check for expiration duration
@@ -240,8 +221,7 @@ contract Event is
     // The following functions are overrides required by Solidity.
     function _beforeTokenTransfer(address from, address to, uint256 tokenId, uint256 batchSize)
         internal
-        override(ERC721Upgradeable, ERC721EnumerableUpgradeable)
-        whenNotPaused
+        override(ERC721Upgradeable)
     {
         super._beforeTokenTransfer(from, to, tokenId, batchSize);
     }
@@ -249,7 +229,7 @@ contract Event is
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override(ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessControlUpgradeable)
+        override(ERC721Upgradeable, AccessControlUpgradeable)
         returns (bool)
     {
         return super.supportsInterface(interfaceId);
